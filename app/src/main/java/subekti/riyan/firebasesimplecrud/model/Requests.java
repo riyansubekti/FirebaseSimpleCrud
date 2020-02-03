@@ -1,10 +1,20 @@
-package subekti.riyan.firebasesimplecrud;
+package subekti.riyan.firebasesimplecrud.model;
 
-public class Requests {
+import com.google.firebase.database.IgnoreExtraProperties;
 
-    public String nama;
-    public String email;
-    public String desk;
+import java.io.Serializable;
+
+@IgnoreExtraProperties
+public class Requests implements Serializable {
+
+    private String nama;
+    private String email;
+    private String desk;
+
+    private String key;
+
+    public Requests(){
+    }
 
     public Requests(String nama, String email, String desk) {
         this.nama = nama;
@@ -34,6 +44,14 @@ public class Requests {
 
     public void setDesk(String desk) {
         this.desk = desk;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
     }
 
     @Override
