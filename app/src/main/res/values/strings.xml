@@ -3,4 +3,5 @@
     <string name="app_add">Tambah Data</string>
     <string name="app_list">Daftar Nama</string>
     <string name="app_edit">Edit Data</string>
+    <string name="app_addit">Form CreateUpdateDelete</string>
 </resources>
