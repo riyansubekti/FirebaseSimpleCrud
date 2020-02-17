@@ -10,16 +10,18 @@ public class Requests implements Serializable {
     private String nama;
     private String email;
     private String desk;
+    private String image;
 
     private String key;
 
     public Requests(){
     }
 
-    public Requests(String nama, String email, String desk) {
+    public Requests(String nama, String email, String desk, String image) {
         this.nama = nama;
         this.email = email;
         this.desk = desk;
+        this.image = image;
     }
 
     public String getNama() {
@@ -53,6 +55,15 @@ public class Requests implements Serializable {
     public void setKey(String key) {
         this.key = key;
     }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
+    }
+
 
     @Override
     public String toString() {
