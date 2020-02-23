@@ -1,7 +1,6 @@
 package subekti.riyan.firebasesimplecrud;
 
 import android.app.ProgressDialog;
-import android.content.ContentProvider;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -31,6 +31,7 @@ import subekti.riyan.firebasesimplecrud.model.Requests;
 public class MainActivity extends AppCompatActivity {
 
     private static final int CHOOSE_IMAGE = 101;
+    private static final String TAG = "oke";
     private DatabaseReference database, mDatabaseRef;
     private StorageReference mStorageRef;
 
@@ -41,7 +42,9 @@ public class MainActivity extends AppCompatActivity {
     ImageView ivGambar;
     Uri mImageUri;
 
-    private String sPid, sPnama, sPemail, sPdesk;
+    private String sPid, sPnama, sPemail, sPdesk, sPimage;
+    private String Ubah = "Ubah";
+    private String Simpan = "Simpan";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         sPnama = getIntent().getStringExtra("nama");
         sPemail = getIntent().getStringExtra("email");
         sPdesk = getIntent().getStringExtra("desk");
+        sPimage = getIntent().getStringExtra("image");
 
         tv_judul = findViewById(R.id.tv_judul);
         etNama = findViewById(R.id.et_nama);
@@ -68,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
         etNama.setText(sPnama);
         etEmail.setText(sPemail);
         etDesk.setText(sPdesk);
+        Picasso.get()
+                .load(sPimage)
+                .fit()
+                .centerCrop()
+                .into(ivGambar);
 
         if (sPid.equals("")){
             btnSimpan.setText("Simpan");
@@ -86,23 +95,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                if (btnSimpan.getText().equals("Simpan")) {
                     // perintah save
-
                     loading = ProgressDialog.show(MainActivity.this, null, "Pleas Wait",
                             true, false);
 
                     submitUser();
-
-                }else {
-                    // perintah edit
-                    loading = ProgressDialog.show(MainActivity.this,
-                            null,
-                            "Please wait...",
-                            true,
-                            false);
-
-                }
 
             }
         });
@@ -134,10 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void saveImage() {
-
-    }
-
     private void showImageChooser() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -154,6 +147,13 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(Void aVoid) {
                         loading.dismiss();
                         Toast.makeText(MainActivity.this, "Data Berhasil Dihapus", Toast.LENGTH_SHORT).show();
+                        StorageReference photoRef = FirebaseStorage.getInstance().getReferenceFromUrl(sPimage);
+                        photoRef.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.e(TAG,"Delete image success !");
+                            }
+                        });
                         startActivity(new Intent(MainActivity.this, ListActivity.class));
                     }
                 });
@@ -165,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (requestCode == CHOOSE_IMAGE && resultCode == RESULT_OK && data != null && data.getData() != null) {
             mImageUri = data.getData();
-
             Picasso.get().load(mImageUri).into(ivGambar);
         }
     }
@@ -188,14 +187,19 @@ public class MainActivity extends AppCompatActivity {
                     fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            Requests request = new Requests(nama,email,desk,uri.toString());
-                            String uploadId = mDatabaseRef.push().getKey();
-                            mDatabaseRef.child(uploadId).setValue(request);
+                            Requests request = new Requests(nama, email, desk, uri.toString());
+                            if (btnSimpan.getText().equals("Simpan")) {
+                                String uploadId = mDatabaseRef.push().getKey();
+                                mDatabaseRef.child(uploadId).setValue(request);
+                            }
+                            if (btnSimpan.getText().equals("Ubah")) {
+                                String uploadId = mDatabaseRef.child(sPid).getKey();
+                                mDatabaseRef.child(uploadId).setValue(request);
+                            }
+                            Toast.makeText(MainActivity.this, "Data Berhasil Ditambahkan", Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(MainActivity.this, ListActivity.class));
                         }
                     });
-
-                    Toast.makeText(MainActivity.this, "Data Berhasil Ditambahkan", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, ListActivity.class));
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -203,10 +207,16 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
-
-        }else{
-            Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show();
+        } else if (mImageUri == null && btnSimpan.getText().equals(Simpan)) {
+            Toast.makeText(MainActivity.this, "Choose your image file", Toast.LENGTH_SHORT).show();
+        } else if (mImageUri == null && btnSimpan.getText().equals(Ubah)) {
+            Requests request = new Requests(nama, email, desk, sPimage);
+            String uploadId = mDatabaseRef.child(sPid).getKey();
+            mDatabaseRef.child(uploadId).setValue(request);
+            Toast.makeText(MainActivity.this, "Data Berhasil Ditambahkan", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(MainActivity.this, ListActivity.class));
         }
+        loading.dismiss();
 
     }
 
